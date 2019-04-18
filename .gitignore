@@ -30,3 +30,9 @@
 *.exe
 *.out
 *.app
+/.vs/csv_utils/v16/Browse.VC.db
+/.vs/csv_utils/v16/ipch/AutoPCH
+/.vs/csv_utils/v16/.suo
+/.vs/csv_utils/v16/Browse.VC.opendb
+/.vs
+/csv_utils/main.cpp
