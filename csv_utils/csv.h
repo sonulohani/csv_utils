@@ -204,7 +204,7 @@ class Csv
 		std::getline(file_stream, line);
 		auto values = split_by_delimiter<sizeof...(Args) + 1>(line, ',');
 		first = values[0];
-		read_values_expanded<sizeof...(Args) + 1, Args...>(args..., values);
+		read_values_internal<sizeof...(Args) + 1, Args...>(args..., values);
 	}
 
 	/**
@@ -226,6 +226,18 @@ class Csv
 	}
 
 	/**
+	 * @brief Sets the csv header to the file. Should be called at the start of writing of the file
+	 * 
+	 * @tparam T 
+	 * @param value 
+	 */
+	template <typename T>
+	void set_header(const T &value)
+	{
+		write_values(value);
+	}
+
+	/**
 	 * @brief Writes command seperated values to the file.
 	 * 
 	 * @param first 
@@ -240,6 +252,18 @@ class Csv
 		write_values(args...);
 	}
 
+	/**
+	 * @brief Writes command seperated values to the file.
+	 * 
+	 * @tparam T 
+	 * @param value 
+	 */
+	template <typename T>
+	void write_values(const T &value)
+	{
+		file_stream << value << '\n';
+	}
+
   private:
 	void read_headers_internal()
 	{
@@ -249,30 +273,18 @@ class Csv
 	}
 
 	template <const int N, typename T>
-	void read_values_expanded(T &arg, const std::array<std::string, N> &arr)
+	void read_values_internal(T &arg, const std::array<std::string, N> &arr)
 	{
 		CastString<T> cs;
 		arg = cs(arr[N - 1]);
 	}
 
 	template <const int N, typename T, typename... Args>
-	void read_values_expanded(T &first, Args &... args, const std::array<std::string, N> &arr)
+	void read_values_internal(T &first, Args &... args, const std::array<std::string, N> &arr)
 	{
 		CastString<T> cs;
 		first = cs(arr[N - sizeof...(Args) - 1]);
-		read_values_expanded<N, Args...>(args..., arr);
-	}
-
-	template <typename T>
-	void write_values(const T &value)
-	{
-		file_stream << value << '\n';
-	}
-
-	template <typename T>
-	void write_header(const T &value)
-	{
-		write_values(value);
+		read_values_internal<N, Args...>(args..., arr);
 	}
 
   private:
