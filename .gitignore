@@ -35,4 +35,5 @@
 /.vs/csv_utils/v16/.suo
 /.vs/csv_utils/v16/Browse.VC.opendb
 /.vs
-/csv_utils/main.cpp
+/.vscode
+/build
