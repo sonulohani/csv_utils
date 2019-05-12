@@ -104,7 +104,7 @@ class Csv
 	 * @param mode Mode in which file to be opened. For mode description head over to:- https://en.cppreference.com/w/cpp/io/ios_base/openmode
 	 * @param file_has_header True if file has header otherwise false
 	 */
-	explicit Csv(std::string &file_name, std::ios_base::openmode mode, bool file_has_header) throw(exception::FileNotOpenedException)
+	explicit Csv(std::string &file_name, std::ios_base::openmode mode, bool file_has_header)
 	{
 		if (!open(file_name, mode, file_has_header))
 		{
@@ -159,7 +159,7 @@ class Csv
 	 * @return true If file can be read further
 	 * @return false If file can't be read further
 	 */
-	bool can_read() throw(exception::FileNotOpenedInReadModeException)
+	bool can_read() const
 	{
 		if ((openmode & std::ios::in) != std::ios::in)
 			throw exception::FileNotOpenedInReadModeException();
@@ -195,7 +195,7 @@ class Csv
 	 * @param first 
 	 * @param args 
 	 */
-	void read_values(T &first, Args &... args) throw(exception::FileNotOpenedInReadModeException)
+	void read_values(T &first, Args &... args)
 	{
 		if ((openmode & std::ios::in) != std::ios::in)
 			throw exception::FileNotOpenedInReadModeException();
@@ -216,7 +216,7 @@ class Csv
 	 * @param args 
 	 */
 	template <typename T, typename... Args>
-	void set_header(const T &first, const Args &... args) throw(exception::FileNotOpenedInWriteModeException)
+	void set_header(const T &first, const Args &... args)
 	{
 		if ((openmode & std::ios::out) != std::ios::out)
 			throw exception::FileNotOpenedInWriteModeException();
@@ -243,7 +243,7 @@ class Csv
 	 * @param first 
 	 * @param args 
 	 */
-	void write_values(const T &first, const Args &... args) throw(exception::FileNotOpenedInWriteModeException)
+	void write_values(const T &first, const Args &... args)
 	{
 		if ((openmode & std::ios::out) != std::ios::out)
 			throw exception::FileNotOpenedInWriteModeException();
