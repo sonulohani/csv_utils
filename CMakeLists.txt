@@ -4,6 +4,7 @@
 cmake_minimum_required(VERSION 3.8)
 project(unit-test)
 SET(CMAKE_BUILD_TYPE Debug)
+set(CMAKE_CXX_STANDARD 17)
 
 ################################
 # GTest
@@ -31,3 +32,4 @@ add_executable(runUnitTests ${CMAKE_CURRENT_SOURCE_DIR}/unit-tests/csv_read_test
 # Link test executable against gtest & gtest_main
 target_link_libraries(runUnitTests gtest gtest_main)
 add_test(runUnitTests runUnitTests)
+configure_file(${CMAKE_CURRENT_SOURCE_DIR}/unit-tests/test_data/100_Sales_Records.csv ${CMAKE_BINARY_DIR}/100_Sales_Records.csv COPYONLY)

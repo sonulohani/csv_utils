@@ -87,7 +87,7 @@ class FileNotOpenedInWriteModeException : std::exception
  * @tparam T 
  * @tparam Args 
  */
-template <typename T, typename... Args>
+template<typename T, typename... Args>
 class Csv
 {
   public:
@@ -104,12 +104,9 @@ class Csv
 	 * @param mode Mode in which file to be opened. For mode description head over to:- https://en.cppreference.com/w/cpp/io/ios_base/openmode
 	 * @param file_has_header True if file has header otherwise false
 	 */
-	explicit Csv(std::string &file_name, std::ios_base::openmode mode, bool file_has_header)
+	explicit Csv(const std::string &file_name, std::ios_base::openmode mode, bool file_has_header)
 	{
-		if (!open(file_name, mode, file_has_header))
-		{
-			throw exception::FileNotOpenedException();
-		}
+		open(file_name, mode, file_has_header);
 	}
 
 	/**
@@ -121,6 +118,11 @@ class Csv
 		close();
 	}
 
+	inline bool is_open() const
+	{
+		return file_stream.is_open();
+	}
+
 	/**
 	 * @brief Opens the file in mode passed
 	 * 
@@ -130,7 +132,7 @@ class Csv
 	 * @return true 
 	 * @return false 
 	 */
-	bool open(std::string &file_name, std::ios_base::openmode mode, bool file_has_header) noexcept
+	bool open(const std::string &file_name, std::ios_base::openmode mode, bool file_has_header) noexcept
 	{
 
 		// close the previous stream if opened
@@ -184,9 +186,15 @@ class Csv
 	 * 
 	 * @return auto 
 	 */
-	inline auto get_header() const noexcept
+	inline std::array<std::string, sizeof...(Args) + 1> get_header() const noexcept
 	{
-		return csv_header;
+		if(!file_stream.is_open())
+			throw exception::FileNotOpenedException();
+
+		if ((openmode & std::ios::in)!= std::ios::in)
+			throw exception::FileNotOpenedInReadModeException();
+
+			return csv_header;
 	}
 
 	/**
@@ -204,7 +212,8 @@ class Csv
 		std::getline(file_stream, line);
 		auto values = split_by_delimiter<sizeof...(Args) + 1>(line, ',');
 		first = values[0];
-		read_values_internal<sizeof...(Args) + 1, Args...>(args..., values);
+		if constexpr (sizeof...(Args))
+			read_values_internal<sizeof...(Args) + 1, Args...>(args..., values);
 	}
 
 	/**
@@ -215,14 +224,14 @@ class Csv
 	 * @param first 
 	 * @param args 
 	 */
-	template <typename T, typename... Args>
-	void set_header(const T &first, const Args &... args)
+	template <typename Type, typename... Arguments>
+	void set_header(const Type &first, const Arguments &... args)
 	{
 		if ((openmode & std::ios::out) != std::ios::out)
 			throw exception::FileNotOpenedInWriteModeException();
 
 		file_stream << first << ',';
-		write_header(args...);
+		write_values(args...);
 	}
 
 	/**
@@ -231,8 +240,8 @@ class Csv
 	 * @tparam T 
 	 * @param value 
 	 */
-	template <typename T>
-	void set_header(const T &value)
+	template <typename Type>
+	void set_header(const Type &value)
 	{
 		write_values(value);
 	}
@@ -258,8 +267,8 @@ class Csv
 	 * @tparam T 
 	 * @param value 
 	 */
-	template <typename T>
-	void write_values(const T &value)
+	template <typename Type>
+	void write_values(const Type &value)
 	{
 		file_stream << value << '\n';
 	}
@@ -272,19 +281,19 @@ class Csv
 		csv_header = split_by_delimiter<sizeof...(Args) + 1>(header_line, ',');
 	}
 
-	template <const int N, typename T>
-	void read_values_internal(T &arg, const std::array<std::string, N> &arr)
+	template <const int N, typename Type>
+	void read_values_internal(Type &arg, const std::array<std::string, N> &arr)
 	{
-		CastString<T> cs;
+		CastString<Type> cs;
 		arg = cs(arr[N - 1]);
 	}
 
-	template <const int N, typename T, typename... Args>
-	void read_values_internal(T &first, Args &... args, const std::array<std::string, N> &arr)
+	template <const int N, typename Type, typename... Arguments>
+	void read_values_internal(Type &first, Arguments &... args, const std::array<std::string, N> &arr)
 	{
-		CastString<T> cs;
-		first = cs(arr[N - sizeof...(Args) - 1]);
-		read_values_internal<N, Args...>(args..., arr);
+		CastString<Type> cs;
+		first = cs(arr[N - sizeof...(Arguments) - 1]);
+		read_values_internal<N, Arguments...>(args..., arr);
 	}
 
   private:
