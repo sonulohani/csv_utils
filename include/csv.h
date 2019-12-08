@@ -11,7 +11,7 @@
 
 namespace
 {
-template<const int N> std::array<std::string, N> split_by_delimiter(const std::string &str, char delimiter)
+template<const int N> std::array<std::string, N> splitByDelimiter(const std::string &str, char delimiter)
 {
     std::array<std::string, N> splitted_str_array = {};
     std::istringstream iss(str);
@@ -96,14 +96,15 @@ template<typename T, typename... Args> class Csv
     /**
      * @brief Constructs a new Csv object
      *
-     * @param file_name Name of the file to be opened for read or write or append
+     * @param fileName Name of the file to be opened for read or write or append
      * @param mode Mode in which file to be opened. For mode description head over
      * to:- https://en.cppreference.com/w/cpp/io/ios_base/openmode
-     * @param file_has_header True if file has header otherwise false
+     * @param fileHasHeader True if file has header otherwise false
      */
-    explicit Csv(const std::string &file_name, std::ios_base::openmode mode, bool file_has_header)
+    explicit Csv(const std::string &fileName, std::ios_base::openmode mode = std::ios_base::in,
+                 bool fileHasHeader = true)
     {
-        open(file_name, mode, file_has_header);
+        open(fileName, mode, fileHasHeader);
     }
 
     /**
@@ -115,35 +116,34 @@ template<typename T, typename... Args> class Csv
         close();
     }
 
-    inline bool is_open() const
+    inline bool isOpened() const
     {
-        return file_stream.is_open();
+        return m_fileStream.is_open();
     }
 
     /**
      * @brief Opens the file in mode passed
      *
-     * @param file_name Name of the file to be opened for read or write or append
+     * @param fileName Name of the file to be opened for read or write or append
      * @param mode Mode in which file to be opened. For mode description head over
      * to:- https://en.cppreference.com/w/cpp/io/ios_base/openmode
-     * @param file_has_header True if file has header otherwise false
+     * @param fileHasHeader True if file has header otherwise false
      * @return true
      * @return false
      */
-    bool open(const std::string &file_name, std::ios_base::openmode mode, bool file_has_header) noexcept
+    bool open(const std::string &fileName, std::ios_base::openmode mode, bool fileHasHeader) noexcept
     {
-
         // close the previous stream if opened
         close();
 
-        openmode = mode;
-        file_stream.open(file_name.c_str(), openmode);
+        m_openmode = mode;
+        m_fileStream.open(fileName.c_str(), m_openmode);
 
-        if (file_stream.is_open())
+        if (m_fileStream.is_open())
         {
-            if ((openmode & std::ios::in) == std::ios::in && file_has_header)
+            if ((m_openmode & std::ios::in) == std::ios::in && fileHasHeader)
             {
-                read_headers_internal();
+                readHeadersInternal();
             }
             return true;
         }
@@ -159,12 +159,12 @@ template<typename T, typename... Args> class Csv
      * @return true If file can be read further
      * @return false If file can't be read further
      */
-    bool can_read() const
+    bool canRead() const
     {
-        if ((openmode & std::ios::in) != std::ios::in)
+        if ((m_openmode & std::ios::in) != std::ios::in)
             throw exception::FileNotOpenedInReadModeException();
 
-        return !file_stream.eof();
+        return !m_fileStream.eof();
     }
 
     /**
@@ -173,9 +173,9 @@ template<typename T, typename... Args> class Csv
      */
     void close() noexcept
     {
-        if (file_stream.is_open())
+        if (m_fileStream.is_open())
         {
-            file_stream.close();
+            m_fileStream.close();
         }
     }
 
@@ -184,15 +184,15 @@ template<typename T, typename... Args> class Csv
      *
      * @return auto
      */
-    inline std::array<std::string, sizeof...(Args) + 1> get_header() const noexcept
+    inline std::array<std::string, sizeof...(Args) + 1> getHeader() const noexcept
     {
-        if (!file_stream.is_open())
+        if (!m_fileStream.is_open())
             throw exception::FileNotOpenedException();
 
-        if ((openmode & std::ios::in) != std::ios::in)
+        if ((m_openmode & std::ios::in) != std::ios::in)
             throw exception::FileNotOpenedInReadModeException();
 
-        return csv_header;
+        return m_csvHeader;
     }
 
     /**
@@ -201,17 +201,17 @@ template<typename T, typename... Args> class Csv
      * @param first
      * @param args
      */
-    void read_values(T &first, Args &... args)
+    void readValues(T &first, Args &... args)
     {
-        if ((openmode & std::ios::in) != std::ios::in)
+        if ((m_openmode & std::ios::in) != std::ios::in)
             throw exception::FileNotOpenedInReadModeException();
 
         std::string line;
-        std::getline(file_stream, line);
-        auto values = split_by_delimiter<sizeof...(Args) + 1>(line, ',');
+        std::getline(m_fileStream, line);
+        auto values = splitByDelimiter<sizeof...(Args) + 1>(line, ',');
         first = values[0];
         if constexpr (sizeof...(Args))
-            read_values_internal<sizeof...(Args) + 1, Args...>(args..., values);
+            readValuesInternal<sizeof...(Args) + 1, Args...>(args..., values);
     }
 
     /**
@@ -223,13 +223,13 @@ template<typename T, typename... Args> class Csv
      * @param first
      * @param args
      */
-    template<typename Type, typename... Arguments> void set_header(const Type &first, const Arguments &... args)
+    template<typename Type, typename... Arguments> void setHeader(const Type &first, const Arguments &... args)
     {
-        if ((openmode & std::ios::out) != std::ios::out)
+        if ((m_openmode & std::ios::out) != std::ios::out)
             throw exception::FileNotOpenedInWriteModeException();
 
-        file_stream << first << ',';
-        write_values(args...);
+        m_fileStream << first << ',';
+        writeValues(args...);
     }
 
     /**
@@ -239,9 +239,9 @@ template<typename T, typename... Args> class Csv
      * @tparam T
      * @param value
      */
-    template<typename Type> void set_header(const Type &value)
+    template<typename Type> void setHeader(const Type &value)
     {
-        write_values(value);
+        writeValues(value);
     }
 
     /**
@@ -250,13 +250,13 @@ template<typename T, typename... Args> class Csv
      * @param first
      * @param args
      */
-    void write_values(const T &first, const Args &... args)
+    void writeValues(const T &first, const Args &... args)
     {
-        if ((openmode & std::ios::out) != std::ios::out)
+        if ((m_openmode & std::ios::out) != std::ios::out)
             throw exception::FileNotOpenedInWriteModeException();
 
-        file_stream << first << ',';
-        write_values(args...);
+        m_fileStream << first << ',';
+        writeValues(args...);
     }
 
     /**
@@ -265,37 +265,37 @@ template<typename T, typename... Args> class Csv
      * @tparam T
      * @param value
      */
-    template<typename Type> void write_values(const Type &value)
+    template<typename Type> void writeValues(const Type &value)
     {
-        file_stream << value << '\n';
+        m_fileStream << value << '\n';
     }
 
   private:
-    void read_headers_internal()
+    void readHeadersInternal()
     {
         std::string header_line;
-        std::getline(file_stream, header_line);
-        csv_header = split_by_delimiter<sizeof...(Args) + 1>(header_line, ',');
+        std::getline(m_fileStream, header_line);
+        m_csvHeader = splitByDelimiter<sizeof...(Args) + 1>(header_line, ',');
     }
 
-    template<const int N, typename Type> void read_values_internal(Type &arg, const std::array<std::string, N> &arr)
+    template<const int N, typename Type> void readValuesInternal(Type &arg, const std::array<std::string, N> &arr)
     {
         CastString<Type> cs;
         arg = cs(arr[N - 1]);
     }
 
     template<const int N, typename Type, typename... Arguments>
-    void read_values_internal(Type &first, Arguments &... args, const std::array<std::string, N> &arr)
+    void readValuesInternal(Type &first, Arguments &... args, const std::array<std::string, N> &arr)
     {
         CastString<Type> cs;
         first = cs(arr[N - sizeof...(Arguments) - 1]);
-        read_values_internal<N, Arguments...>(args..., arr);
+        readValuesInternal<N, Arguments...>(args..., arr);
     }
 
   private:
-    std::fstream file_stream;
-    std::array<std::string, sizeof...(Args) + 1> csv_header;
-    std::ios_base::openmode openmode;
+    std::fstream m_fileStream;
+    std::array<std::string, sizeof...(Args) + 1> m_csvHeader;
+    std::ios_base::openmode m_openmode;
 };
 } // namespace io
 
