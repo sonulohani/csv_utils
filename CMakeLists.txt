@@ -27,6 +27,7 @@ include_directories(${gtest_SOURCE_DIR}/include ${gtest_SOURCE_DIR} ${CMAKE_CURR
 
 # Add test cpp file
 add_executable(runUnitTests ${CMAKE_CURRENT_SOURCE_DIR}/unit-tests/csv_read_test.cpp  
+                            ${CMAKE_CURRENT_SOURCE_DIR}/unit-tests/open_mode_test.cpp  
                             ${CMAKE_CURRENT_SOURCE_DIR}/unit-tests/main.cpp)
                             
 # Link test executable against gtest & gtest_main

@@ -6,10 +6,10 @@
 TEST(CsvRead, TestOpenInCtor)
 {
     // Opening file which is not in existence
-    io::Csv<std::string> csv("abc.csv", std::ios_base::in, true);
+    io::Csv<std::string> csv("abc.csv", io::OpenMode::Read, true);
     EXPECT_FALSE(csv.isOpened());
 
-    io::Csv<std::string> csv1(std::string("100_Sales_Records.csv"), std::ios_base::in, true);
+    io::Csv<std::string> csv1(std::string("100_Sales_Records.csv"), io::OpenMode::Read, true);
     EXPECT_TRUE(csv1.isOpened());
 }
 
@@ -17,28 +17,28 @@ TEST(CsvRead, TestOpen)
 {
     // Opening file which is not in existence
     io::Csv<std::string> csv;
-    EXPECT_FALSE(csv.open("abc.csv", std::ios_base::in, true));
+    EXPECT_FALSE(csv.open("abc.csv", io::OpenMode::Read, true));
     EXPECT_FALSE(csv.isOpened());
 
-    EXPECT_TRUE(csv.open(std::string("100_Sales_Records.csv"), std::ios_base::in, true));
+    EXPECT_TRUE(csv.open(std::string("100_Sales_Records.csv"), io::OpenMode::Read, true));
     EXPECT_TRUE(csv.isOpened());
 }
 
 TEST(CsvRead, TestHeader)
 {
-    io::Csv<std::string> csv1(std::string("100_Sales_Records.csv"), std::ios_base::in, true);
+    io::Csv<std::string> csv1(std::string("100_Sales_Records.csv"), io::OpenMode::Read, true);
     auto header1 = csv1.getHeader();
     ASSERT_EQ(1, static_cast<int>(header1.size()));
     EXPECT_STREQ("Region", header1[0].c_str());
 
-    io::Csv<std::string, std::string> csv2(std::string("100_Sales_Records.csv"), std::ios_base::in, true);
+    io::Csv<std::string, std::string> csv2(std::string("100_Sales_Records.csv"), io::OpenMode::Read, true);
     auto header2 = csv2.getHeader();
     ASSERT_EQ(2, static_cast<int>(header2.size()));
     EXPECT_STREQ("Region", header2[0].c_str());
     EXPECT_STREQ("Country", header2[1].c_str());
 
     io::Csv<std::string, std::string, std::string, std::string, std::string> csv3(std::string("100_Sales_Records.csv"),
-                                                                                  std::ios_base::in, true);
+                                                                                  io::OpenMode::Read, true);
     auto header3 = csv3.getHeader();
     ASSERT_EQ(5, static_cast<int>(header3.size()));
     EXPECT_STREQ("Region", header3[0].c_str());
@@ -53,7 +53,7 @@ TEST(CsvRead, TestHeaderBeyondRange)
     io::Csv<std::string, std::string, std::string, std::string, std::string, std::string, std::string, std::string,
             std::string, std::string, std::string, std::string, std::string, std::string, std::string, std::string,
             std::string>
-        csv(std::string("100_Sales_Records.csv"), std::ios_base::in, true);
+        csv(std::string("100_Sales_Records.csv"), io::OpenMode::Read, true);
 
     auto header = csv.getHeader();
     ASSERT_EQ(17, static_cast<int>(header.size()));
@@ -66,7 +66,7 @@ TEST(CsvRead, TestHeaderBeyondRange)
 
 TEST(CsvRead, TestSingleValue)
 {
-    io::Csv<std::string> csv(std::string("100_Sales_Records.csv"), std::ios_base::in, true);
+    io::Csv<std::string> csv(std::string("100_Sales_Records.csv"), io::OpenMode::Read, true);
     std::string region;
     csv.readValues(region);
     EXPECT_STREQ("Australia and Oceania", region.c_str());
@@ -74,7 +74,7 @@ TEST(CsvRead, TestSingleValue)
 
 TEST(CsvRead, TestMultipleValue)
 {
-    io::Csv<std::string, std::string, std::string> csv(std::string("100_Sales_Records.csv"), std::ios_base::in, true);
+    io::Csv<std::string, std::string, std::string> csv(std::string("100_Sales_Records.csv"), io::OpenMode::Read, true);
     std::string region, country, item_type;
     csv.readValues(region, country, item_type);
     EXPECT_STREQ("Australia and Oceania", region.c_str());
