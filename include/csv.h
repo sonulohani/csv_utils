@@ -78,6 +78,24 @@ class FileNotOpenedInWriteModeException : std::exception
 };
 } // namespace exception
 
+enum class OpenMode : uint32_t
+{
+    Read = std::ios::in,
+    Write = std::ios::out,
+    Append = std::ios::app,
+};
+
+inline OpenMode operator&(const OpenMode &lhs, const OpenMode &rhs)
+{
+    return static_cast<OpenMode>(static_cast<uint32_t>(lhs) & static_cast<uint32_t>(rhs));
+}
+
+inline OpenMode operator&=(const OpenMode &lhs, const OpenMode &rhs)
+{
+    auto result = (static_cast<uint32_t>(lhs) & static_cast<uint32_t>(rhs));
+    return static_cast<OpenMode>(result);
+}
+
 /**
  * @brief Class to write or read csv files
  *
@@ -97,12 +115,10 @@ template<typename T, typename... Args> class Csv
      * @brief Constructs a new Csv object
      *
      * @param fileName Name of the file to be opened for read or write or append
-     * @param mode Mode in which file to be opened. For mode description head over
-     * to:- https://en.cppreference.com/w/cpp/io/ios_base/openmode
+     * @param mode Mode in which file to be opened.
      * @param fileHasHeader True if file has header otherwise false
      */
-    explicit Csv(const std::string &fileName, std::ios_base::openmode mode = std::ios_base::in,
-                 bool fileHasHeader = true)
+    explicit Csv(const std::string &fileName, OpenMode mode = OpenMode::Read, bool fileHasHeader = true)
     {
         open(fileName, mode, fileHasHeader);
     }
@@ -131,17 +147,17 @@ template<typename T, typename... Args> class Csv
      * @return true
      * @return false
      */
-    bool open(const std::string &fileName, std::ios_base::openmode mode, bool fileHasHeader) noexcept
+    bool open(const std::string &fileName, OpenMode mode, bool fileHasHeader) noexcept
     {
         // close the previous stream if opened
         close();
 
         m_openmode = mode;
-        m_fileStream.open(fileName.c_str(), m_openmode);
+        m_fileStream.open(fileName.c_str(), static_cast<std::ios_base::openmode>(m_openmode));
 
         if (m_fileStream.is_open())
         {
-            if ((m_openmode & std::ios::in) == std::ios::in && fileHasHeader)
+            if ((m_openmode & OpenMode::Read) == OpenMode::Read && fileHasHeader)
             {
                 readHeadersInternal();
             }
@@ -161,7 +177,7 @@ template<typename T, typename... Args> class Csv
      */
     bool canRead() const
     {
-        if ((m_openmode & std::ios::in) != std::ios::in)
+        if ((m_openmode & OpenMode::Read) != OpenMode::Read)
             throw exception::FileNotOpenedInReadModeException();
 
         return !m_fileStream.eof();
@@ -189,7 +205,7 @@ template<typename T, typename... Args> class Csv
         if (!m_fileStream.is_open())
             throw exception::FileNotOpenedException();
 
-        if ((m_openmode & std::ios::in) != std::ios::in)
+        if ((m_openmode & OpenMode::Read) != OpenMode::Read)
             throw exception::FileNotOpenedInReadModeException();
 
         return m_csvHeader;
@@ -203,7 +219,7 @@ template<typename T, typename... Args> class Csv
      */
     void readValues(T &first, Args &... args)
     {
-        if ((m_openmode & std::ios::in) != std::ios::in)
+        if ((m_openmode & OpenMode::Read) != OpenMode::Read)
             throw exception::FileNotOpenedInReadModeException();
 
         std::string line;
@@ -225,7 +241,7 @@ template<typename T, typename... Args> class Csv
      */
     template<typename Type, typename... Arguments> void setHeader(const Type &first, const Arguments &... args)
     {
-        if ((m_openmode & std::ios::out) != std::ios::out)
+        if ((m_openmode & OpenMode::Write) != OpenMode::Write)
             throw exception::FileNotOpenedInWriteModeException();
 
         m_fileStream << first << ',';
@@ -252,7 +268,7 @@ template<typename T, typename... Args> class Csv
      */
     void writeValues(const T &first, const Args &... args)
     {
-        if ((m_openmode & std::ios::out) != std::ios::out)
+        if ((m_openmode & OpenMode::Write) != OpenMode::Write)
             throw exception::FileNotOpenedInWriteModeException();
 
         m_fileStream << first << ',';
@@ -295,7 +311,7 @@ template<typename T, typename... Args> class Csv
   private:
     std::fstream m_fileStream;
     std::array<std::string, sizeof...(Args) + 1> m_csvHeader;
-    std::ios_base::openmode m_openmode;
+    OpenMode m_openmode;
 };
 } // namespace io
 
