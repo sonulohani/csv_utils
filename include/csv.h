@@ -2,29 +2,41 @@
 #define CSV_H
 
 #include <array>
+#include <cstdint>
 #include <exception>
 #include <fstream>
 #include <iostream>
+#include <limits>
 #include <sstream>
 #include <string>
 #include <vector>
 
 namespace
 {
-template<const int N> std::array<std::string, N> splitByDelimiter(const std::string &str, char delimiter)
+template<const int32_t N> std::array<std::string, N> splitByDelimiter(const std::string &str, char delimiter)
 {
     std::array<std::string, N> splitted_str_array = {};
     std::istringstream iss(str);
     std::string temp;
-    int index = 0;
+    int32_t index = {};
     while (std::getline(iss, temp, delimiter) && index < N)
     {
         splitted_str_array[index++] = temp;
     }
     return splitted_str_array;
 }
+} // namespace
 
-template<typename T> class CastString
+namespace utils
+{
+
+/**
+ * @brief Converter class.
+ * By default, all the values from csv are read in string. To convert string to other datatype
+ * this class is used.
+ * @tparam T Type to convert to from string.
+ */
+template<typename T> class Converter
 {
   public:
     T operator()(const std::string &str) const
@@ -37,7 +49,7 @@ template<typename T> class CastString
     }
 };
 
-template<> class CastString<std::string>
+template<> class Converter<std::string>
 {
   public:
     std::string operator()(const std::string &str) const
@@ -45,7 +57,171 @@ template<> class CastString<std::string>
         return str;
     }
 };
-} // namespace
+
+template<> class Converter<uint16_t>
+{
+  public:
+    uint16_t operator()(const std::string &str) const
+    {
+        try
+        {
+            auto convertedValue = std::stoul(str);
+            if (convertedValue >= std::numeric_limits<uint16_t>::min() &&
+                convertedValue <= std::numeric_limits<uint16_t>::max())
+            {
+                return static_cast<uint16_t>(convertedValue);
+            }
+            else
+            {
+                throw std::range_error("Value conversion failed to uint16_t.");
+            }
+        }
+        catch (const std::invalid_argument &invalidArg)
+        {
+            std::cerr << invalidArg.what();
+            throw;
+        }
+    }
+};
+
+template<> class Converter<int16_t>
+{
+  public:
+    int16_t operator()(const std::string &str) const
+    {
+        try
+        {
+            auto convertedValue = std::stoi(str);
+            if (convertedValue >= std::numeric_limits<int16_t>::min() &&
+                convertedValue <= std::numeric_limits<int16_t>::max())
+            {
+                return static_cast<int16_t>(convertedValue);
+            }
+            else
+            {
+                throw std::range_error("Value conversion failed to int16_t.");
+            }
+        }
+        catch (const std::invalid_argument &invalidArg)
+        {
+            std::cerr << invalidArg.what();
+            throw;
+        }
+    }
+};
+
+template<> class Converter<int32_t>
+{
+  public:
+    int32_t operator()(const std::string &str) const
+    {
+        try
+        {
+            return std::stoi(str);
+        }
+        catch (const std::invalid_argument &invalidArg)
+        {
+            std::cerr << invalidArg.what();
+            throw;
+        }
+    }
+};
+
+template<> class Converter<uint32_t>
+{
+  public:
+    uint32_t operator()(const std::string &str) const
+    {
+        try
+        {
+            auto convertedValue = std::stoul(str);
+            if (convertedValue >= std::numeric_limits<uint32_t>::min() &&
+                convertedValue <= std::numeric_limits<uint32_t>::max())
+            {
+                return static_cast<uint32_t>(convertedValue);
+            }
+            else
+            {
+                throw std::range_error("Value conversion failed to uint32_t.");
+            }
+        }
+        catch (const std::invalid_argument &invalidArg)
+        {
+            std::cerr << invalidArg.what();
+            throw;
+        }
+    }
+};
+
+template<> class Converter<uint64_t>
+{
+  public:
+    uint64_t operator()(const std::string &str) const
+    {
+        try
+        {
+            return std::stoul(str);
+        }
+        catch (const std::invalid_argument &invalidArg)
+        {
+            std::cerr << invalidArg.what();
+            throw;
+        }
+    }
+};
+
+template<> class Converter<int64_t>
+{
+  public:
+    int64_t operator()(const std::string &str) const
+    {
+        try
+        {
+            return std::stol(str);
+        }
+        catch (const std::invalid_argument &invalidArg)
+        {
+            std::cerr << invalidArg.what();
+            throw;
+        }
+    }
+};
+
+template<> class Converter<double>
+{
+  public:
+    double operator()(const std::string &str) const
+    {
+        try
+        {
+            return std::stod(str);
+        }
+        catch (const std::invalid_argument &invalidArg)
+        {
+            std::cerr << invalidArg.what();
+            throw;
+        }
+    }
+};
+
+template<> class Converter<float>
+{
+  public:
+    float operator()(const std::string &str) const
+    {
+        try
+        {
+            return std::stof(str);
+        }
+        catch (const std::invalid_argument &invalidArg)
+        {
+            std::cerr << invalidArg.what();
+            throw;
+        }
+    }
+};
+
+} // namespace utils
 
 namespace io
 {
@@ -115,7 +291,7 @@ template<typename T, typename... Args> class Csv
      * @brief Constructs a new Csv object
      *
      * @param fileName Name of the file to be opened for read or write or append
-     * @param mode Mode in which file to be opened.
+     * @param mode Mode in which file to be opened
      * @param fileHasHeader True if file has header otherwise false
      */
     explicit Csv(const std::string &fileName, OpenMode mode = OpenMode::Read, bool fileHasHeader = true)
@@ -141,8 +317,7 @@ template<typename T, typename... Args> class Csv
      * @brief Opens the file in mode passed
      *
      * @param fileName Name of the file to be opened for read or write or append
-     * @param mode Mode in which file to be opened. For mode description head over
-     * to:- https://en.cppreference.com/w/cpp/io/ios_base/openmode
+     * @param mode Mode in which file to be opened
      * @param fileHasHeader True if file has header otherwise false
      * @return true
      * @return false
@@ -224,7 +399,7 @@ template<typename T, typename... Args> class Csv
 
         std::string line;
         std::getline(m_fileStream, line);
-        auto values = splitByDelimiter<sizeof...(Args) + 1>(line, ',');
+        auto values = splitByDelimiter<sizeof...(Args) + 1>(line, m_delimiter);
         first = values[0];
         if constexpr (sizeof...(Args))
             readValuesInternal<sizeof...(Args) + 1, Args...>(args..., values);
@@ -286,24 +461,44 @@ template<typename T, typename... Args> class Csv
         m_fileStream << value << '\n';
     }
 
+    /**
+     * @brief Sets the csv delimiter
+     *
+     * @param delimiter
+     */
+    void setDelimiter(const char delimiter)
+    {
+        m_delimiter = delimiter;
+    }
+
+    /**
+     * @brief Returns the delimiter
+     *
+     * @return char
+     */
+    char getDelimiter() const
+    {
+        return m_delimiter;
+    }
+
   private:
     void readHeadersInternal()
     {
         std::string header_line;
         std::getline(m_fileStream, header_line);
-        m_csvHeader = splitByDelimiter<sizeof...(Args) + 1>(header_line, ',');
+        m_csvHeader = splitByDelimiter<sizeof...(Args) + 1>(header_line, m_delimiter);
     }
 
-    template<const int N, typename Type> void readValuesInternal(Type &arg, const std::array<std::string, N> &arr)
+    template<const int32_t N, typename Type> void readValuesInternal(Type &arg, const std::array<std::string, N> &arr)
     {
-        CastString<Type> cs;
+        utils::Converter<Type> cs;
         arg = cs(arr[N - 1]);
     }
 
-    template<const int N, typename Type, typename... Arguments>
+    template<const int32_t N, typename Type, typename... Arguments>
     void readValuesInternal(Type &first, Arguments &... args, const std::array<std::string, N> &arr)
     {
-        CastString<Type> cs;
+        utils::Converter<Type> cs;
         first = cs(arr[N - sizeof...(Arguments) - 1]);
         readValuesInternal<N, Arguments...>(args..., arr);
     }
@@ -312,6 +507,7 @@ template<typename T, typename... Args> class Csv
     std::fstream m_fileStream;
     std::array<std::string, sizeof...(Args) + 1> m_csvHeader;
     OpenMode m_openmode;
+    char m_delimiter = ',';
 };
 } // namespace io
 
