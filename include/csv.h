@@ -294,7 +294,22 @@ template<typename T, typename... Args> class Csv
      * @param mode Mode in which file to be opened
      * @param fileHasHeader True if file has header otherwise false
      */
-    explicit Csv(const std::string &fileName, OpenMode mode = OpenMode::Read, bool fileHasHeader = true)
+    explicit Csv(const std::string &fileName, const OpenMode mode = OpenMode::Read, const bool fileHasHeader = true)
+        : Csv(fileName, m_delimiter, mode, fileHasHeader)
+    {
+    }
+
+    /**
+     * @brief Constructs a new Csv object
+     *
+     * @param fileName Name of the file to be opened for read or write or append
+     * @param delimiter Csv delimiter
+     * @param mode Mode in which file to be opened
+     * @param fileHasHeader True if file has header otherwise false
+     */
+    explicit Csv(const std::string &fileName, const char delimiter, const OpenMode mode = OpenMode::Read,
+                 const bool fileHasHeader = true)
+        : m_delimiter(delimiter)
     {
         open(fileName, mode, fileHasHeader);
     }
