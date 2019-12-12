@@ -14,12 +14,10 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v1
-    - name: Make build dir
+    - uses: actions/checkout@master
+    - name: Run cmake and make
       run: |
         mkdir build
         cd build
-    - name: CMake configure
-      run: cmake -G "Unix Makefiles" -DCMAKE_BUILD_TYPE=Debug ../
-    - name: Build
-      run: make
+        cmake -G "Unix Makefiles" -DCMAKE_BUILD_TYPE=Debug ../
+        make
