@@ -15,10 +15,10 @@ jobs:
 
     steps:
     - uses: actions/checkout@master
-      with:
-        submodules: true
     - name: Run cmake and make
       run: |
+        git submodule init
+        git submodule update
         mkdir build
         cd build
         cmake -G "Unix Makefiles" -DCMAKE_BUILD_TYPE=Debug ../
