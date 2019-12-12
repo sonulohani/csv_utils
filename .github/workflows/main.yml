@@ -23,3 +23,5 @@ jobs:
         cd build
         cmake -G "Unix Makefiles" -DCMAKE_BUILD_TYPE=Debug ../
         make
+        ctest -C Debug -T test --output-on-failure
+        
