@@ -295,7 +295,7 @@ template<typename T, typename... Args> class Csv
      * @param fileHasHeader True if file has header otherwise false
      */
     explicit Csv(const std::string &fileName, const OpenMode mode = OpenMode::Read, const bool fileHasHeader = true)
-        : Csv(fileName, m_delimiter, mode, fileHasHeader)
+        : Csv(fileName, ',', mode, fileHasHeader)
     {
     }
 
