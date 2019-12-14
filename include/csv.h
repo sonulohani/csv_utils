@@ -390,7 +390,7 @@ template<typename T, typename... Args> class Csv
      *
      * @return auto
      */
-    inline std::array<std::string, sizeof...(Args) + 1> getHeader() const noexcept
+    inline std::array<std::string, sizeof...(Args) + 1> getHeader() const
     {
         if (!m_fileStream.is_open())
             throw exception::FileNotOpenedException();
