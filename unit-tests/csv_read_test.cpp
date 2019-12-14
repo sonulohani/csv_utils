@@ -86,10 +86,8 @@ TEST(CsvRead, TestMultipleValue)
     EXPECT_STREQ("Cereal", item_type.c_str());
 }
 
-// TEST(CsvRead, TestHeaderWhenFileNameIsInvalid)
-//{
-//	io::Csv<std::string> csv(std::string("abc.csv"),
-//			std::ios_base::in, true);
-//
-//	EXPECT_THROW(csv.get_header(), io::exception::FileNotOpenedException);
-//}
+TEST(CsvRead, TestHeaderWhenFileNameIsInvalid)
+{
+    io::Csv<std::string> csv(std::string("some_test_file.csv"), io::OpenMode::Read, true);
+    EXPECT_THROW(csv.getHeader(), io::exception::FileNotOpenedException);
+}
