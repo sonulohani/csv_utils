@@ -5,6 +5,7 @@ cmake_minimum_required(VERSION 3.8)
 project(unit-test)
 SET(CMAKE_BUILD_TYPE Debug)
 set(CMAKE_CXX_STANDARD 17)
+option(WERROR "Threat all warnings as errors" ON)
 
 ################################
 # GTest
@@ -20,6 +21,10 @@ endif()
 ADD_SUBDIRECTORY(googletest)
 enable_testing()
 include_directories(${gtest_SOURCE_DIR}/include ${gtest_SOURCE_DIR} ${CMAKE_CURRENT_SOURCE_DIR}/include)
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++14 -Wall -Wno-unused-variable -Wno-unused-function -fno-strict-aliasing -O2 -fPIC -fvisibility=hidden")
+if (WERROR)
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Werror")
+endif()
 
 ################################
 # Unit Tests
